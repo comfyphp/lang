@@ -41,12 +41,17 @@ $lang = new ComfyPHP\Lang();
 
 Create separate JSON files for each language you want to support. And Place these files into the languages folder. For example, create the following files:
 
+`src/langs/en/index.json`:
+
 ```php
-// src/langs/en/index.json
 {
     "hello": "Hello!"
 }
-// src/langs/en/special.json
+```
+
+`src/langs/en/special.json`:
+
+```php
 {
     "setting": {
         "title": "Settings"
