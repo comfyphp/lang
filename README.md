@@ -54,7 +54,7 @@ Create separate JSON files for each language you want to support. And Place thes
 ```php
 {
     "setting": {
-        "title": "Settings"
+        "title": "Settings",
         "info": "This is the Settings page."
     }
 }
