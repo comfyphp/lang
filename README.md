@@ -1,13 +1,13 @@
 # ComfyPHP Multiple Languages Extension
 
-This is a extension for ComfyPHP framework to enable the function using multiple languages.
+This is an extension for ComfyPHP framework to enable the function using multiple languages.
 
 ## Default & Recommended Directory Structure
 
 -   `src` directory (default) <br/>
     Where the source files for editing reside. <br/><br/>
     -   `langs` directory (default) <br/>
-        Store all languages related source code. <br/><br/>
+        Store all the languages related source code. <br/><br/>
         -   `en` directory (optional) <br/>
             English translation folder. <br/><br/>
             -   `index.json` language file <br/>
@@ -31,7 +31,7 @@ composer require comfyphp/lang
 
 ## Usage
 
-ComfyPHP will search for the all the languages based on the `CONFIG_LANG_PATH` settings in `comfy.lang.config.php`.
+ComfyPHP will search for all the languages base on the `CONFIG_LANG_PATH` settings in `comfy.lang.config.php`.
 
 You can add the following line into somewhere and import it into every files later, here we take `src/pages/_init.php` for example:
 
@@ -39,7 +39,7 @@ You can add the following line into somewhere and import it into every files lat
 $lang = new ComfyPHP\Lang();
 ```
 
-Create separate JSON files for each language you want to support. And Place these files in the languages folder. For example, create the following files:
+Create separate JSON files for each language you want to support. And Place these files into the languages folder. For example, create the following files:
 
 ```php
 // src/langs/en/index.json
