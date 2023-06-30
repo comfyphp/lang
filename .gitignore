@@ -1,0 +1,14 @@
+# cache
+__MACOSX
+.DS_Store
+
+# settings
+.vscode/
+
+# composer
+vendor/
+composer.phar
+composer.lock
+
+# log
+*.log
