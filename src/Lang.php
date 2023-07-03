@@ -2,18 +2,22 @@
 
 namespace ComfyPHP;
 
-class Lang
+interface LangInterface
+{
+    public function useLanguage(string $key = null): mixed;
+}
+
+class Lang implements LangInterface
 {
     public string $root; // root directory
     public string $lang; // selected language
-    public Core $core;
-    public Tool $tool;
+    public Tools\Internal $itool;
+    protected \Closure $useLanguageF;
 
     public function __construct()
     {
         // declarations - class
-        $this->core = new Core();
-        $this->tool = new Tool();
+        $this->itool = new Tools\Internal();
 
         // declarations
         $this->root = $GLOBALS["ROOT"];
@@ -32,13 +36,16 @@ class Lang
         $this->lang = $GLOBALS["CONFIG_LANG_FALLBACK"];
 
         // get configs
-        $this->getConfigs();
+        $this->setConfigs();
 
         // get langs
         $this->getLangs();
+
+        // init useLang function
+        $this->initUseLanguage();
     }
 
-    private function getConfigs()
+    protected function setConfigs(): void
     {
         $name = "comfy.lang.config.php";
         $configs = [
@@ -50,13 +57,13 @@ class Lang
             "CONFIG_LANG_COOKIE" => ["save language preference to cookie", "boolean", true],
             "CONFIG_LANG_COOKIE_NAME" => ["cookie name that store the language", "string", "lang"],
             "CONFIG_LANG_COOKIE_DOMAIN" => ["cookie domain that store the language, default blank for localhost", "string", ""],
-            "CONFIG_LANG_COOKIE_TIME" => ["how long will the cookie be valid, default 1 month", "dynamic", "time() + 3600 * 24 * 30"],
+            "CONFIG_LANG_COOKIE_TIME" => ["how long will the cookie be valid, default 30 days", "dynamic", "time() + (60 * 60 * 24 * 30)"],
         ];
 
-        $this->core->setConfigs($name, $configs);
+        $this->itool->checkConfigs($name, $configs);
     }
 
-    private function getLangs()
+    protected function getLangs(): void
     {
         // lang provider
         $provider = $GLOBALS["CONFIG_LANG_PROVIDER"];
@@ -94,14 +101,67 @@ class Lang
         $cookieConfig && setcookie($cookieName, $this->lang, $cookieTime, "/", $cookieDomain);
     }
 
-    public function useLanguage()
+    protected function searchKey(array $data, array $keys): array
     {
-        return function ($key) {
+        // Get the first key from the array
+        $currentKey = array_shift($keys);
+
+        // check current data and key
+        if (is_array($data) && array_key_exists($currentKey, $data)) {
+            $value = $data[$currentKey];
+
+            // check if value still array
+            if (count($keys) > 0 && is_array($value)) {
+                // search again
+                $result = $this->searchKey($value, $keys);
+
+                // success
+                if ($result["message"] !== "failed") {
+                    return array(
+                        "message" => "success",
+                        "data" => $result["data"],
+                    );
+                }
+                // failed
+                else {
+                    return array(
+                        "message" => "failed",
+                        "error" => "error: key[" . implode("->", $keys) . "] not found!",
+                    );
+                }
+            }
+            // end of array
+            else {
+                return is_string($value) ?
+                // success
+                array(
+                    "message" => "success",
+                    "data" => $value,
+                ) :
+                // who are u
+                array(
+                    "message" => "failed",
+                    "error" => "key[$currentKey] not found!",
+                );
+            }
+        }
+
+        // result
+        return array(
+            "message" => "failed",
+            "error" => "key[$currentKey] not found!",
+        );
+    }
+
+    protected function initUseLanguage(): void
+    {
+        $this->useLanguageF = function (string $key): string{
             // declarations
             $root = $this->root;
             $lang = $this->lang;
             $fallback = $GLOBALS["CONFIG_LANG_FALLBACK"];
             $path = $GLOBALS["CONFIG_LANG_PATH"];
+            $debug = $GLOBALS["SYSTEM_DEBUG"];
 
             // $targetFile = "settings" etc...
             // $keys = ["home", "title"];
@@ -124,36 +184,50 @@ class Lang
                 $fallbackFilePath = "$root/$path/$fallback/index.json";
             }
 
+            // target language path is set
             if (file_exists("$targetFilePath")) {
-                $json = file_get_contents("$targetFilePath");
-                $json_data = json_decode($json, true);
-            } else if (file_exists("$fallbackFilePath")) {
-                $json = file_get_contents("$fallbackFilePath");
-                $json_data = json_decode($json, true);
+                $json = json_decode(file_get_contents($targetFilePath), true);
+            }
+            // fallback path
+            else if (file_exists("$fallbackFilePath")) {
+                $json = json_decode(file_get_contents($fallbackFilePath), true);
+            } else {
+                return ($debug ? "error: file not found!" : "");
             }
 
-            return $this->searchKey($json_data, $keys);
+            $value = $this->searchKey($json, $keys);
+
+            // assume target language key not found
+            // find fallback language key instead
+            if ($value["message"] === "failed") {
+                $fb_json = json_decode(file_get_contents($fallbackFilePath), true);
+                $fb_value = $this->searchKey($fb_json, $keys);
+
+                // fallback failed
+                if ($fb_value["message"] === "failed") {
+                    return ($debug ? $fb_value["error"] : "");
+                }
+
+                // success
+                return $fb_value["data"];
+            }
+
+            // success
+            return $value["data"];
         };
     }
 
-    private function searchKey(array $data, array $keys): string
+    public function useLanguage(string $key = null): mixed
     {
         // declarations
-        $debug = $GLOBALS["SYSTEM_DEBUG"];
-        // Get the first key from the array
-        $currentKey = array_shift($keys);
+        $useLang = $this->useLanguageF;
 
-        if (is_array($data) && array_key_exists($currentKey, $data)) {
-            $value = $data[$currentKey];
-
-            if (count($keys) > 0 && is_array($value)) {
-                $result = $this->searchKey($value, $keys);
-                return is_string($result) ? $result : ($debug ? "key:$result not found" : "");
-            } else {
-                return is_string($value) ? $value : ($debug ? "key:$value not found" : "");
-            }
+        // indirect function
+        if (!$key) {
+            return $useLang;
         }
 
-        return ($debug ? "key:$currentKey not found" : "");
+        // direct function
+        return $useLang($key);
     }
 }

@@ -19,7 +19,7 @@ This is an extension for ComfyPHP framework to enable the function using multipl
 
 ## Before Using it
 
-As this is an extension for ComfyPHP, All dependencies required in ComfyPHP and ComfyPHP is needed to use this extension.
+As this is an extension for ComfyPHP, All dependencies required in ComfyPHP and ComfyPHP itself is needed to use this extension.
 
 ## Download / Install
 
@@ -31,6 +31,8 @@ composer require comfyphp/lang
 
 ## Usage
 
+### Initialize
+
 ComfyPHP will search for all the languages base on the `CONFIG_LANG_PATH` settings in `comfy.lang.config.php`.
 
 You can add the following line into somewhere and import it into every files later, here we take `src/pages/_init.php` for example:
@@ -39,11 +41,13 @@ You can add the following line into somewhere and import it into every files lat
 $lang = new ComfyPHP\Lang();
 ```
 
+### Create JSON
+
 Create separate JSON files for each language you want to support. And Place these files into the languages folder. For example, create the following files:
 
 `src/langs/en/index.json`:
 
-```php
+```json
 {
     "hello": "Hello!"
 }
@@ -51,7 +55,7 @@ Create separate JSON files for each language you want to support. And Place thes
 
 `src/langs/en/special.json`:
 
-```php
+```json
 {
     "setting": {
         "title": "Settings",
@@ -60,20 +64,36 @@ Create separate JSON files for each language you want to support. And Place thes
 }
 ```
 
+### Usage
+
 In the files where you want to use the multiple languages extension, add the following code to require the file which you initialized the lang extension and enable the function to use those languages:
 
 ```php
 $root = $GLOBALS["ROOT"];
 $pagePath = $GLOBALS["CONFIG_PAGE_PATH"];
 require_once "$root/$pagePath/_init.php";
-$t = $lang->useLanguage();
+$l = $lang->useLanguage();
 ```
 
-Within the body of your code, you can now access the language strings.
+You can now use language strings in your code. When you write `$l("hello")`, the extension will look for the key `hello` in the `index.json` file. If you write `$l("special:setting.info")`, the extension will search for the key `info` under the `setting` key in the `special.json` file.
 
 ```php
-echo $t("hello");
-echo $t("special:setting.info");
+echo $l("hello");
+echo $l("special:setting.info");
+```
+
+## Reserved Variables of the Extension
+
+```php
+$GLOBALS["CONFIG_LANG_PATH"];
+$GLOBALS["CONFIG_LANG_PROVIDER"];
+$GLOBALS["CONFIG_LANG_FALLBACK"];
+$GLOBALS["CONFIG_LANG_PARAM"];
+$GLOBALS["CONFIG_LANG_PARAM_NAME"];
+$GLOBALS["CONFIG_LANG_COOKIE"];
+$GLOBALS["CONFIG_LANG_COOKIE_NAME"];
+$GLOBALS["CONFIG_LANG_COOKIE_DOMAIN"];
+$GLOBALS["CONFIG_LANG_COOKIE_TIME"];
 ```
 
 ## License
