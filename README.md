@@ -4,18 +4,17 @@ This is an extension for ComfyPHP framework to enable the function using multipl
 
 ## Default & Recommended Directory Structure
 
--   `src` directory (default) <br/>
-    Where the source files for editing reside. <br/><br/>
-    -   `langs` directory (default) <br/>
-        Store all the languages related source code. <br/><br/>
-        -   `en` directory (optional) <br/>
-            English translation folder. <br/><br/>
-            -   `index.json` language file <br/>
-                English translation files. <br/><br/>
-        -   `zh-Hant` directory (optional) <br/>
-            Traditional Chinese translation folder. <br/><br/>
-            -   `index.json` language file <br/>
-                Traditional Chinese translation files. <br/><br/>
+```
+├── src
+│   └── langs
+│       ├── en
+│       │   └── index.json
+│       ├── zh-Hans
+│       │   └── index.json
+│       └── zh-Hant
+│           └── index.json
+└── comfy.lang.config.php
+```
 
 ## Before Using it
 
